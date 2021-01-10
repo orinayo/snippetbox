@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 func (app *application) serverError(resWriter http.ResponseWriter, err error) {
@@ -22,7 +23,15 @@ func (app *application) notFound(resWriter http.ResponseWriter) {
 	app.clientError(resWriter, http.StatusNotFound)
 }
 
-func (app *application) render(resWriter http.ResponseWriter, req *http.Request, name string, templateData *templateData) {
+func (app *application) addDefaultData(data *templateData, req *http.Request) *templateData {
+	if data == nil {
+		data = &templateData{}
+	}
+	data.CurrentYear = time.Now().Year()
+	return data
+}
+
+func (app *application) render(resWriter http.ResponseWriter, req *http.Request, name string, data *templateData) {
 	templateSet, ok := app.templateCache[name]
 	if !ok {
 		app.serverError(resWriter, fmt.Errorf("The template %s does not exist", name))
@@ -30,8 +39,8 @@ func (app *application) render(resWriter http.ResponseWriter, req *http.Request,
 	}
 
 	buffer := new(bytes.Buffer)
-
-	err := templateSet.Execute(buffer, templateData)
+	// catch runtime errors by trial rendering template as stream
+	err := templateSet.Execute(buffer, app.addDefaultData(data, req))
 
 	if err != nil {
 		app.serverError(resWriter, err)
