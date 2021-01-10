@@ -1,10 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"html/template"
+
+	// "html/template"
 	"net/http"
 	"strconv"
+
+	"orinayooyelade.com/snippetbox/pkg/models"
 )
 
 func (app *application) home(resWriter http.ResponseWriter, req *http.Request) {
@@ -13,22 +17,32 @@ func (app *application) home(resWriter http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-
-	templateSet, err := template.ParseFiles(files...)
+	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(resWriter, err)
 		return
 	}
 
-	err = templateSet.Execute(resWriter, nil)
-	if err != nil {
-		app.serverError(resWriter, err)
+	for _, snippet := range snippets {
+		fmt.Fprintf(resWriter, "%v\n", snippet)
 	}
+
+	// files := []string{
+	// 	"./ui/html/home.page.tmpl",
+	// 	"./ui/html/base.layout.tmpl",
+	// 	"./ui/html/footer.partial.tmpl",
+	// }
+
+	// templateSet, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	app.serverError(resWriter, err)
+	// 	return
+	// }
+
+	// err = templateSet.Execute(resWriter, nil)
+	// if err != nil {
+	// 	app.serverError(resWriter, err)
+	// }
 }
 
 func (app *application) showSnippet(resWriter http.ResponseWriter, req *http.Request) {
@@ -37,7 +51,18 @@ func (app *application) showSnippet(resWriter http.ResponseWriter, req *http.Req
 		app.notFound(resWriter)
 		return
 	}
-	fmt.Fprintf(resWriter, "Display a specific snippet with ID %d", id)
+
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(resWriter)
+		} else {
+			app.serverError(resWriter, err)
+		}
+		return
+	}
+
+	fmt.Fprintf(resWriter, "%v", snippet)
 }
 
 func (app *application) createSnippet(resWriter http.ResponseWriter, req *http.Request) {
@@ -46,5 +71,16 @@ func (app *application) createSnippet(resWriter http.ResponseWriter, req *http.R
 		app.clientError(resWriter, http.StatusMethodNotAllowed)
 		return
 	}
-	resWriter.Write([]byte("Create a new snippet"))
+
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := "7"
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(resWriter, err)
+		return
+	}
+
+	http.Redirect(resWriter, req, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 }
