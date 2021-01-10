@@ -3,8 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-
-	// "html/template"
 	"net/http"
 	"strconv"
 
@@ -23,26 +21,7 @@ func (app *application) home(resWriter http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(resWriter, "%v\n", snippet)
-	}
-
-	// files := []string{
-	// 	"./ui/html/home.page.tmpl",
-	// 	"./ui/html/base.layout.tmpl",
-	// 	"./ui/html/footer.partial.tmpl",
-	// }
-
-	// templateSet, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(resWriter, err)
-	// 	return
-	// }
-
-	// err = templateSet.Execute(resWriter, nil)
-	// if err != nil {
-	// 	app.serverError(resWriter, err)
-	// }
+	app.render(resWriter, req, "home.page.tmpl", &templateData{Snippets: snippets})
 }
 
 func (app *application) showSnippet(resWriter http.ResponseWriter, req *http.Request) {
@@ -62,7 +41,7 @@ func (app *application) showSnippet(resWriter http.ResponseWriter, req *http.Req
 		return
 	}
 
-	fmt.Fprintf(resWriter, "%v", snippet)
+	app.render(resWriter, req, "show.page.tmpl", &templateData{Snippet: snippet})
 }
 
 func (app *application) createSnippet(resWriter http.ResponseWriter, req *http.Request) {
