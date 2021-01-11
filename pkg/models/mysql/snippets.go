@@ -7,12 +7,12 @@ import (
 	"orinayooyelade.com/snippetbox/pkg/models"
 )
 
-// SnippetModel type which wraps a sql.DB connection pool ...
+// SnippetModel struct which wraps a sql.DB connection pool
 type SnippetModel struct {
 	DB *sql.DB
 }
 
-// Insert will insert a new snippet into the database ...
+// Insert will insert a new snippet into the database
 func (model *SnippetModel) Insert(title, content, expires string) (int, error) {
 	stmt := `INSERT INTO snippets (title, content, created, expires)
 	VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
@@ -30,7 +30,7 @@ func (model *SnippetModel) Insert(title, content, expires string) (int, error) {
 	return int(id), nil
 }
 
-// Get will return a specific snippet based on its id ...
+// Get will return a specific snippet based on its id
 func (model *SnippetModel) Get(id int) (*models.Snippet, error) {
 	stmt := ` SELECT id, title, content, created, expires FROM snippets
 	WHERE expires > UTC_TIMESTAMP() AND id = ?`
@@ -49,7 +49,7 @@ func (model *SnippetModel) Get(id int) (*models.Snippet, error) {
 	return snippet, nil
 }
 
-// Latest will return the 10 most recently created snippets ...
+// Latest will return the 10 most recently created snippets
 func (model *SnippetModel) Latest() ([]*models.Snippet, error) {
 	stmt := ` SELECT id, title, content, created, expires FROM snippets 
 	WHERE expires > UTC_TIMESTAMP() ORDER BY created DESC LIMIT 10`
