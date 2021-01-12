@@ -77,3 +77,19 @@ func (app *application) createSnippet(resWriter http.ResponseWriter, req *http.R
 
 	http.Redirect(resWriter, req, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
+
+func (app *application) signupUserForm(resWriter http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(resWriter, "Display the user signup form...")
+}
+func (app *application) signupUser(resWriter http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(resWriter, "Create a new user...")
+}
+func (app *application) loginUserForm(resWriter http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(resWriter, "Display the user login form...")
+}
+func (app *application) loginUser(resWriter http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(resWriter, "Authenticate and login the user...")
+}
+func (app *application) logoutUser(resWriter http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(resWriter, "Logout the user...")
+}
