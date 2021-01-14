@@ -14,6 +14,18 @@ func secureHeaders(next http.Handler) http.Handler {
 	})
 }
 
+func (app *application) requireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
+		if !app.isAuthenticated(req) {
+			http.Redirect(resWriter, req, "/user/login", http.StatusSeeOther)
+			return
+		}
+
+		resWriter.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(resWriter, req)
+	})
+}
+
 func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
 		app.infoLog.Printf("%s - %s %s %s", req.RemoteAddr, req.Proto, req.Method, req.URL.RequestURI())

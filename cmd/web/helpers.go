@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+func (app *application) isAuthenticated(req *http.Request) bool {
+	return app.session.Exists(req, "authenticatedUserID")
+}
+
 func (app *application) serverError(resWriter http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.errorLog.Output(2, trace)
@@ -29,6 +33,7 @@ func (app *application) addDefaultData(data *templateData, req *http.Request) *t
 	}
 	data.CurrentYear = time.Now().Year()
 	data.Flash = app.session.PopString(req, "flash")
+	data.IsAuthenticated = app.isAuthenticated(req)
 	return data
 }
 
