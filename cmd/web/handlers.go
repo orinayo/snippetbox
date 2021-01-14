@@ -120,11 +120,44 @@ func (app *application) signupUser(resWriter http.ResponseWriter, req *http.Requ
 }
 
 func (app *application) loginUserForm(resWriter http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(resWriter, "Display the user login form...")
+	app.render(resWriter, req, "login.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 func (app *application) loginUser(resWriter http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(resWriter, "Authenticate and login the user...")
+	err := req.ParseForm()
+	if err != nil {
+		app.clientError(resWriter, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(req.PostForm)
+	form.Required("email", "password")
+	form.MaxLength("email", 255)
+	form.MatchesPattern("email", forms.EmailRX)
+	form.MinLength("password", 10)
+
+	if !form.Valid() {
+		app.render(resWriter, req, "login.page.tmpl", &templateData{
+			Form: form,
+		})
+		return
+	}
+
+	id, err := app.users.Authenticate(form.Get("email"), form.Get("password"))
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.Errors.Add("generic", "Email or Password is incorrect")
+			app.render(resWriter, req, "login.page.tmpl", &templateData{Form: form})
+		} else {
+			app.serverError(resWriter, err)
+		}
+		return
+	}
+
+	app.session.Put(req, "authenticatedUserID", id)
+	http.Redirect(resWriter, req, "/snippet/create", http.StatusSeeOther)
 }
 func (app *application) logoutUser(resWriter http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(resWriter, "Logout the user...")
+	app.session.Remove(req, "authenticatedUserID")
+	app.session.Put(req, "flash", "You've been logged out successfully!")
+	http.Redirect(resWriter, req, "/", http.StatusSeeOther)
 }
