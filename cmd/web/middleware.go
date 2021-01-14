@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/justinas/nosurf"
+	"orinayooyelade.com/snippetbox/pkg/models"
 )
 
 func noSurf(next http.Handler) http.Handler {
@@ -24,6 +27,29 @@ func secureHeaders(next http.Handler) http.Handler {
 		resWriter.Header().Set("X-Frame-Options", "deny")
 
 		next.ServeHTTP(resWriter, req)
+	})
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
+		exists := app.session.Exists(req, "authenticatedUserID")
+		if !exists {
+			next.ServeHTTP(resWriter, req)
+			return
+		}
+
+		user, err := app.users.Get(app.session.GetInt(req, "authenticatedUserID"))
+		if errors.Is(err, models.ErrNoRecord) || !user.Active {
+			app.session.Remove(req, "authenticatedUserID")
+			next.ServeHTTP(resWriter, req)
+			return
+		} else if err != nil {
+			app.serverError(resWriter, err)
+			return
+		}
+
+		ctx := context.WithValue(req.Context(), contextKeyIsAuthenticated, true)
+		next.ServeHTTP(resWriter, req.WithContext(ctx))
 	})
 }
 

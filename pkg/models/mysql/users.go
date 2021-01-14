@@ -41,7 +41,7 @@ func (model *UserModel) Insert(name, email, password string) error {
 func (model *UserModel) Authenticate(email, password string) (int, error) {
 	var id int
 	var hashedPassword []byte
-	stmt := "SELECT id, hashed_password FROM users WHERE email = ? AND active = TRUE"
+	stmt := `SELECT id, hashed_password FROM users WHERE email = ? AND active = TRUE`
 	err := model.DB.QueryRow(stmt, email).Scan(&id, &hashedPassword)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -62,5 +62,15 @@ func (model *UserModel) Authenticate(email, password string) (int, error) {
 
 // Get will return a specific user based on its id
 func (model *UserModel) Get(id int) (*models.User, error) {
-	return nil, nil
+	user := &models.User{}
+	stmt := `SELECT id, name, email, created, active FROM users WHERE id = ?`
+	err := model.DB.QueryRow(stmt, id).Scan(&user.ID, &user.Name, &user.Email, &user.Created, &user.Active)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		}
+		return nil, err
+	}
+
+	return user, nil
 }
