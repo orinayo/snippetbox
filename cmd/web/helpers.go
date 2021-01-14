@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/justinas/nosurf"
 )
 
 func (app *application) isAuthenticated(req *http.Request) bool {
@@ -31,6 +33,8 @@ func (app *application) addDefaultData(data *templateData, req *http.Request) *t
 	if data == nil {
 		data = &templateData{}
 	}
+
+	data.CSRFToken = nosurf.Token(req)
 	data.CurrentYear = time.Now().Year()
 	data.Flash = app.session.PopString(req, "flash")
 	data.IsAuthenticated = app.isAuthenticated(req)
