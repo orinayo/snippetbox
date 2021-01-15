@@ -10,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"orinayooyelade.com/snippetbox/pkg/models"
 	"orinayooyelade.com/snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -20,13 +21,24 @@ type contextKey string
 
 const contextKeyIsAuthenticated = contextKey("isAuthenticated")
 
+type ISnippets interface {
+	Insert(string, string, string) (int, error)
+	Get(int) (*models.Snippet, error)
+	Latest() ([]*models.Snippet, error)
+}
+
+type IUser interface {
+	Insert(string, string, string) error
+	Authenticate(string, string) (int, error)
+	Get(int) (*models.User, error)
+}
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
 	session       *sessions.Session
-	snippets      *mysql.SnippetModel
+	snippets      ISnippets
 	templateCache map[string]*template.Template
-	users         *mysql.UserModel
+	users         IUser
 }
 
 func main() {
