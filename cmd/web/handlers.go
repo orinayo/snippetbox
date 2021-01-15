@@ -10,6 +10,10 @@ import (
 	"orinayooyelade.com/snippetbox/pkg/models"
 )
 
+func ping(resWriter http.ResponseWriter, req *http.Request) {
+	resWriter.Write([]byte("OK"))
+}
+
 func (app *application) home(resWriter http.ResponseWriter, req *http.Request) {
 	snippets, err := app.snippets.Latest()
 	if err != nil {

@@ -20,7 +20,10 @@ type templateData struct {
 }
 
 func humanDate(timeObj time.Time) string {
-	return timeObj.Format("02 Jan 2006 at 15:04")
+	if timeObj.IsZero() {
+		return ""
+	}
+	return timeObj.UTC().Format("02 Jan 2006 at 15:04")
 }
 
 var functions = template.FuncMap{
