@@ -169,3 +169,13 @@ func (app *application) logoutUser(resWriter http.ResponseWriter, req *http.Requ
 func (app *application) about(resWriter http.ResponseWriter, req *http.Request) {
 	app.render(resWriter, req, "about.page.tmpl", nil)
 }
+
+func (app *application) userProfile(resWriter http.ResponseWriter, req *http.Request) {
+	userID := app.session.GetInt(req, "authenticatedUserID")
+	user, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(resWriter, err)
+		return
+	}
+	app.render(resWriter, req, "profile.page.tmpl", &templateData{User: user})
+}
