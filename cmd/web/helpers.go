@@ -22,6 +22,11 @@ func (app *application) serverError(resWriter http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.errorLog.Output(2, trace)
 
+	if app.debug {
+		http.Error(resWriter, trace, http.StatusInternalServerError)
+		return
+	}
+
 	http.Error(resWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
