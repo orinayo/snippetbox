@@ -158,8 +158,14 @@ func (app *application) loginUser(resWriter http.ResponseWriter, req *http.Reque
 	}
 
 	app.session.Put(req, "authenticatedUserID", id)
+	path := app.session.PopString(req, "redirectPathAfterLogin")
+	if path != "" {
+		http.Redirect(resWriter, req, path, http.StatusSeeOther)
+		return
+	}
 	http.Redirect(resWriter, req, "/snippet/create", http.StatusSeeOther)
 }
+
 func (app *application) logoutUser(resWriter http.ResponseWriter, req *http.Request) {
 	app.session.Remove(req, "authenticatedUserID")
 	app.session.Put(req, "flash", "You've been logged out successfully!")
