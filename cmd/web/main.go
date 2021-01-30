@@ -31,6 +31,7 @@ type IUser interface {
 	Insert(string, string, string) error
 	Authenticate(string, string) (int, error)
 	Get(int) (*models.User, error)
+	ChangePassword(int, string, string) error
 }
 type application struct {
 	errorLog      *log.Logger

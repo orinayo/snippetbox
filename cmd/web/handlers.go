@@ -179,3 +179,40 @@ func (app *application) userProfile(resWriter http.ResponseWriter, req *http.Req
 	}
 	app.render(resWriter, req, "profile.page.tmpl", &templateData{User: user})
 }
+
+func (app *application) changePasswordForm(resWriter http.ResponseWriter, req *http.Request) { // Some code will go here later...
+	app.render(resWriter, req, "password.page.tmpl", &templateData{Form: forms.New(nil)})
+}
+
+func (app *application) changePassword(resWriter http.ResponseWriter, req *http.Request) { // Some code will go here later...
+	err := req.ParseForm()
+	if err != nil {
+		app.clientError(resWriter, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(req.PostForm)
+	form.Required("currentPassword", "newPassword", "newPasswordConfirmation")
+	form.MinLength("newPassword", 8)
+	if form.Get("newPassword") != form.Get("newPasswordConfirmation") {
+		form.Errors.Add("newPasswordConfirmation", "Passwords do not match")
+	}
+	if !form.Valid() {
+		app.render(resWriter, req, "password.page.tmpl", &templateData{Form: form})
+		return
+	}
+
+	userID := app.session.GetInt(req, "authenticatedUserID")
+	err = app.users.ChangePassword(userID, form.Get("currentPassword"), form.Get("newPassword"))
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.Errors.Add("currentPassword", "Current password is incorrect")
+			app.render(resWriter, req, "password.page.tmpl", &templateData{Form: form})
+		} else if err != nil {
+			app.serverError(resWriter, err)
+		}
+		return
+	}
+
+	app.session.Put(req, "flash", "Your password has been updated!")
+	http.Redirect(resWriter, req, "/user/profile", http.StatusSeeOther)
+}
