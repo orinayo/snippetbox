@@ -165,3 +165,7 @@ func (app *application) logoutUser(resWriter http.ResponseWriter, req *http.Requ
 	app.session.Put(req, "flash", "You've been logged out successfully!")
 	http.Redirect(resWriter, req, "/", http.StatusSeeOther)
 }
+
+func (app *application) about(resWriter http.ResponseWriter, req *http.Request) {
+	app.render(resWriter, req, "about.page.tmpl", nil)
+}
